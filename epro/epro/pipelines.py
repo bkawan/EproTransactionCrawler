@@ -20,7 +20,7 @@ class EproCsvPipeline(object):
     def __init__(self):
         reload(sys)
         # sys.setdefaultencoding('utf8')
-        self.csvwriter = csv.writer(codecs.open('{}alltransaction8.csv'.format(csv_path),'wb'))
+        self.csvwriter = csv.writer(codecs.open('{}alltransaction.csv'.format(csv_path),'wb'))
         self.csvwriter.writerow([
             'Deposit ID',
              'Check Date',
