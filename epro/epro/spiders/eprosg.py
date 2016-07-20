@@ -7,32 +7,61 @@ import re
 from epro.items import EproItem
 
 
+
+
 class EprosgSpider(scrapy.Spider):
     name = "epro"
     allowed_domains = ["epro.sg"]
     start_urls = [
         "https://admin.epro.sg/adms/titan/login/",
 
-
     ]
+
     def __init__(self):
         sys.stdout = codecs.getwriter(locale.getpreferredencoding())(sys.stdout)
         reload(sys)
         sys.setdefaultencoding('utf-8')
 
     def parse(self, response):
-        return scrapy.FormRequest.from_response(
-            response,
-            formdata = {'userid': 'admin', 'userpass': '7n4TTE2N'},
-            callback=self.after_login
-        )
+        try:
+            login_file = open('login_details.txt')
+
+            username = None
+            password = None
+            for detail in login_file:
+                if detail.lower().startswith('username'):
+                    username = detail.split(":")[1].strip()
+                if detail.lower().startswith('password'):
+                    password = detail.split(":")[1].strip()
+
+            print("*****************")
+            print ("Username: {}; Password: {}".format(username,password))
+            print("*****************")
+
+            return scrapy.FormRequest.from_response(
+                response,
+                formdata = {'userid': username, 'userpass': password},
+                callback=self.after_login,
+            )
+        except (OSError, IOError) as e:
+            print("*********************************")
+            print(e)
+            self.logger.error("File Not Found")
+            print("********************************")
+
 
     def after_login(self,response):
-        response = response.urljoin('request')
-        return scrapy.Request(response,callback=self.parse_all_transaction)
+
+        if "Login Failed" in response.body:
+            print("********************************************************************************************************")
+            self.logger.error("Login failed!! Please check user name and password in login_details.txt file")
+            print("*******************************************************************************************************")
+            return
+        else:
+            response = response.urljoin('request')
+            return scrapy.Request(response,callback=self.parse_all_transaction)
 
     def parse_all_transaction(self,response):
-
         all_transaction_sel = response.xpath("//td[@rowspan='2']/a/@href").extract()
         for transaction in all_transaction_sel:
             info_regex = re.search(r'request/info/\d+', transaction)
@@ -61,31 +90,42 @@ class EprosgSpider(scrapy.Spider):
             transaction_detail.append(item.xpath(".//text()").extract_first())
 
         item = EproItem()
-        item['DepositID'] = transaction_detail[0]
-        item['CheckDate'] = transaction_detail[1]
-        item['BankCode'] = transaction_detail[2]
-        item['BankName'] = transaction_detail[3]
-        item['AccountNumber'] = transaction_detail[4]
-        item['BankCurrency'] = transaction_detail[5]
-        item['SenderName'] = transaction_detail[6]
-        item['SenderNameAlphabet'] = transaction_detail[7]
-        item['Currency'] = transaction_detail[8]
-        item['DepositAmount'] = transaction_detail[9]
-        item['RemittingBank'] = transaction_detail[10]
-        item['RemittingBankBranchName'] = transaction_detail[11]
-        item['LIFT_CHG_CUR1'] = transaction_detail[12]
-        item['LIFT_CHG_1'] = transaction_detail[13]
-        item['LIFT_CHG_CUR2'] = transaction_detail[14]
-        item['LIFT_CHG_2'] = transaction_detail[15]
-        item['REMIT_CHG_CUR'] = transaction_detail[16]
-        item['REMIT_CHG'] = transaction_detail[17]
-        item['Status'] = transaction_detail[18]
-        item['StatusChangeDate'] = transaction_detail[19]
-        item['API'] = transaction_detail[20]
-        item['APIDateAndTime'] = transaction_detail[21]
-        item['TransferStatus'] = transaction_detail[22]
-        item['TransferDate'] = transaction_detail[23]
-        item['RefundDate'] = transaction_detail[24]
-        item['TimeStamp'] = transaction_detail[25]
+        item['DepositID'] = self.get_index(transaction_detail,0)
+        item['CheckDate'] = self.get_index(transaction_detail,1)
+        item['BankCode'] = self.get_index(transaction_detail,2)
+        item['BankName'] = self.get_index(transaction_detail,3)
+        item['AccountNumber'] = self.get_index(transaction_detail,4)
+        item['BankCurrency'] = self.get_index(transaction_detail,5)
+        item['SenderName'] = self.get_index(transaction_detail,6)
+        item['SenderNameAlphabet'] = self.get_index(transaction_detail,7)
+        item['Currency'] = self.get_index(transaction_detail,8)
+        item['DepositAmount'] = self.get_index(transaction_detail,9)
+        item['RemittingBank'] = self.get_index(transaction_detail,10)
+        item['RemittingBankBranchName'] = self.get_index(transaction_detail,11)
+        item['LIFT_CHG_CUR1'] = self.get_index(transaction_detail,12)
+        item['LIFT_CHG_1'] = self.get_index(transaction_detail,13)
+        item['LIFT_CHG_CUR2'] = self.get_index(transaction_detail,14)
+        item['LIFT_CHG_2'] = self.get_index(transaction_detail,15)
+        item['REMIT_CHG_CUR'] = self.get_index(transaction_detail,16)
+        item['REMIT_CHG'] = self.get_index(transaction_detail,17)
+        item['Status'] = self.get_index(transaction_detail,18)
+        item['StatusChangeDate'] = self.get_index(transaction_detail,19)
+        item['API'] = self.get_index(transaction_detail,20)
+        item['APIDateAndTime'] = self.get_index(transaction_detail,21)
+        item['TransferStatus'] = self.get_index(transaction_detail,22)
+        item['TransferDate'] = self.get_index(transaction_detail,23)
+        item['RefundDate'] = self.get_index(transaction_detail,24)
+        item['TimeStamp'] = self.get_index(transaction_detail,25)
 
-        return  item
+        return item
+
+    def get_index(self, item_list, index):
+        try:
+            value = item_list[index]
+            try:
+                value = value.strip()
+            except:
+                value = value
+        except:
+            value = ""
+        return value

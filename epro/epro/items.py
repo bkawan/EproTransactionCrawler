@@ -9,14 +9,6 @@ import scrapy
 
 
 class EproItem(scrapy.Item):
-    # define the fields for your item here like:
-    # name = scrapy.Field()
-
-
-
-
-
-
 
     DepositID = scrapy.Field()
     CheckDate = scrapy.Field()
