@@ -7,6 +7,10 @@ import re
 from epro.items import EproItem
 
 
+from scrapy.shell import inspect_response
+
+
+
 
 
 class EprosgSpider(scrapy.Spider):
@@ -62,12 +66,27 @@ class EprosgSpider(scrapy.Spider):
             return scrapy.Request(response,callback=self.parse_all_transaction)
 
     def parse_all_transaction(self,response):
-        all_transaction_sel = response.xpath("//td[@rowspan='2']/a/@href").extract()
-        for transaction in all_transaction_sel:
-            info_regex = re.search(r'request/info/\d+', transaction)
-            if info_regex:
-                link = "https://admin.epro.sg/adms/titan/{}".format(info_regex.group())
-                yield scrapy.Request(link,self.parse_each_transaction)
+        # inspect_response(response, self)
+
+        all_tr_row = response.xpath("//tbody/tr")
+        for tr in all_tr_row:
+            id = tr.xpath("td/text()").extract_first()
+            try:
+                deposit_id = int(id)
+                if deposit_id > 1750:
+                    all_transaction_sel = response.xpath("//td[@rowspan='2']/a/@href").extract()
+                    for transaction in all_transaction_sel:
+                        info_regex = re.search(r'request/info/\d+', transaction)
+                        if info_regex:
+                            link = "https://admin.epro.sg/adms/titan/{}".format(info_regex.group())
+                            yield scrapy.Request(link, self.parse_each_transaction)
+
+            except ValueError:
+                print ("********")
+                print("deposit Id less than or equal to 1750")
+                print("*************")
+
+
 
         all_a_tags_sel = response.xpath("//li/a")
         for sel in all_a_tags_sel:
