@@ -71,20 +71,21 @@ class EprosgSpider(scrapy.Spider):
         all_tr_row = response.xpath("//tbody/tr")
         for tr in all_tr_row:
             id = tr.xpath("td/text()").extract_first()
-            try:
-                deposit_id = int(id)
-                if deposit_id > 1750:
-                    all_transaction_sel = response.xpath("//td[@rowspan='2']/a/@href").extract()
-                    for transaction in all_transaction_sel:
-                        info_regex = re.search(r'request/info/\d+', transaction)
-                        if info_regex:
-                            link = "https://admin.epro.sg/adms/titan/{}".format(info_regex.group())
-                            yield scrapy.Request(link, self.parse_each_transaction)
+            if id:
+                try:
+                    deposit_id = int(id)
+                    if deposit_id > 1750:
+                        all_transaction_sel = tr.xpath("//td[@rowspan='2']/a/@href").extract()
+                        for transaction in all_transaction_sel:
+                            info_regex = re.search(r'request/info/\d+', transaction)
+                            if info_regex:
+                                link = "https://admin.epro.sg/adms/titan/{}".format(info_regex.group())
+                                yield scrapy.Request(link, self.parse_each_transaction)
 
-            except ValueError:
-                print ("********")
-                print("deposit Id less than or equal to 1750")
-                print("*************")
+                except ValueError:
+                    print ("********")
+                    print("deposit Id less than or equal to 1750")
+                    print("*************")
 
 
 
