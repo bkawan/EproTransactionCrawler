@@ -8,11 +8,6 @@ from epro.items import EproItem
 
 
 from scrapy.shell import inspect_response
-
-
-
-
-
 class EprosgSpider(scrapy.Spider):
     name = "epro"
     allowed_domains = ["epro.sg"]
@@ -27,6 +22,7 @@ class EprosgSpider(scrapy.Spider):
         sys.setdefaultencoding('utf-8')
 
     def parse(self, response):
+
         try:
             login_file = open('login_details.txt')
 
@@ -38,28 +34,19 @@ class EprosgSpider(scrapy.Spider):
                 if detail.lower().startswith('password'):
                     password = detail.split(":")[1].strip()
 
-            print("*****************")
-            print ("Username: {}; Password: {}".format(username,password))
-            print("*****************")
-
             return scrapy.FormRequest.from_response(
                 response,
                 formdata = {'userid': username, 'userpass': password},
                 callback=self.after_login,
             )
         except (OSError, IOError) as e:
-            print("*********************************")
-            print(e)
-            self.logger.error("File Not Found")
-            print("********************************")
+            self.logger.error(e)
 
 
     def after_login(self,response):
 
         if "Login Failed" in response.body:
-            print("********************************************************************************************************")
             self.logger.error("Login failed!! Please check user name and password in login_details.txt file")
-            print("*******************************************************************************************************")
             return
         else:
             response = response.urljoin('request')
@@ -75,7 +62,7 @@ class EprosgSpider(scrapy.Spider):
                 try:
                     deposit_id = int(id)
                     if deposit_id > 1750:
-                        all_transaction_sel = tr.xpath("//td[@rowspan='2']/a/@href").extract()
+                        all_transaction_sel = tr.xpath("td[@rowspan='2']/a/@href").extract()
                         for transaction in all_transaction_sel:
                             info_regex = re.search(r'request/info/\d+', transaction)
                             if info_regex:
@@ -83,10 +70,7 @@ class EprosgSpider(scrapy.Spider):
                                 yield scrapy.Request(link, self.parse_each_transaction)
 
                 except ValueError:
-                    print ("********")
-                    print("deposit Id less than or equal to 1750")
-                    print("*************")
-
+                    pass
 
 
         all_a_tags_sel = response.xpath("//li/a")
