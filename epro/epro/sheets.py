@@ -12,12 +12,10 @@ from oauth2client import tools
 
 class Sheets():
 
+
     def __init__(self, spreadsheetId, client_secret_file, application_name):
-        try:
-            import argparse
-            self.flags = argparse.ArgumentParser(parents=[tools.argparser]).parse_args()
-        except ImportError:
-            self.lags = None
+        self.flags = None
+
 
         self.SCOPES = 'https://www.googleapis.com/auth/spreadsheets'
         self.CLIENT_SECRET_FILE = client_secret_file
@@ -88,7 +86,7 @@ class Sheets():
         new_row.append('=if(J{}<50000,1000,0)'.format(row_count)) #O
         new_row.append('=N{0}-O{0}'.format(row_count)) #P
 
-        rangeName = 'A{0}:J{0}'.format(row_count)
+        rangeName = 'A{0}:P{0}'.format(row_count)
 
         body = {
             'range' : rangeName,

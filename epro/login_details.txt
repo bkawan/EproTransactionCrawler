@@ -1,4 +1,4 @@
 URL: https://admin.epro.sg/adms/titan/login/
 Login using this credentials:
-Username: yourusername
-Password: yourpassword
+Username: loginusername
+Password: loginpassword

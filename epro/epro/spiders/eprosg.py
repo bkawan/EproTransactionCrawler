@@ -5,23 +5,28 @@ import codecs
 import locale
 import re
 from epro.items import EproItem
-
-
+from epro.sheets import Sheets
 from scrapy.shell import inspect_response
+
 class EprosgSpider(scrapy.Spider):
     name = "epro"
     allowed_domains = ["epro.sg"]
     start_urls = [
         "https://admin.epro.sg/adms/titan/login/",
-
     ]
 
     def __init__(self):
+        sheet = Sheets('1mKAsY92nA3I6PhTkNd9aLIY8_SZMXERr2wg5WTYMk34', 'client_secret.json',
+                       'FinancialData')
+        self.last_id = sheet.get_last_id()
         sys.stdout = codecs.getwriter(locale.getpreferredencoding())(sys.stdout)
         reload(sys)
         sys.setdefaultencoding('utf-8')
 
     def parse(self, response):
+        print("*******")
+        print(type(int(self.last_id)))
+        print("*******")
 
         try:
             login_file = open('login_details.txt')
@@ -61,7 +66,7 @@ class EprosgSpider(scrapy.Spider):
             if id:
                 try:
                     deposit_id = int(id)
-                    if deposit_id > 1750:
+                    if deposit_id > int(self.last_id):
                         all_transaction_sel = tr.xpath("td[@rowspan='2']/a/@href").extract()
                         for transaction in all_transaction_sel:
                             info_regex = re.search(r'request/info/\d+', transaction)
