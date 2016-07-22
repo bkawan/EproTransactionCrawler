@@ -1,14 +1,27 @@
 # EproTransactionCrawler
 
+follow Steps 1 https://developers.google.com/sheets/quickstart/python#troubleshooting to generate client_secret.json
+
 $ git clone https://github.com/bkawan/EproTransactionCrawler.git
 
-$ cd epro
+- replace client_secret.json located at EproTransactionCrawler/epro/epro with newly generated
 
-open **login_details.txt** and make changes to following and save the file
+- open **login_details.txt** and make changes to following and save the file
 
   - Username: yourloginusername
   - Password: yourloginpassword
 
+$ cd epro
+
+
 $ scrapy crawl epro
 
-Extracted data will be saved at location **EproTransactionCrawler/epro/data/csv/alltransaction.csv**
+Extracted data will be sinked with google sheets ( need permission for google sheets)
+
+** Dependencies **
+
+$pip install httplib2
+
+$pip install oauth2client
+
+$pip install google-api-python-client
